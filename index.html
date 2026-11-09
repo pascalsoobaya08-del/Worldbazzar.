@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1457d9">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="WorldBazaar">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>WorldBazaar</title>
+<style>
+:root{--blue:#1457d9;--ink:#14213d;--muted:#667085;--line:#e7ebf2;--bg:#f5f7fb}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--ink)}
+header{background:var(--blue);color:white;padding:22px 18px 26px;border-radius:0 0 24px 24px}
+.brand{font-size:25px;font-weight:800;letter-spacing:-.5px}.tag{opacity:.9;margin-top:5px;font-size:14px}
+.wrap{max-width:760px;margin:auto;padding:16px}
+.search{display:flex;gap:8px;margin-top:18px}input,select,textarea{font:inherit;border:1px solid var(--line);border-radius:12px;padding:13px;background:white;min-width:0;width:100%}
+.search input{flex:1}.btn{border:0;border-radius:12px;background:var(--blue);color:white;padding:13px 16px;font-weight:700}
+.lang{float:right;background:#ffffff22;color:white;border:1px solid #ffffff55;border-radius:10px;padding:7px 10px}
+h2{font-size:19px;margin:22px 0 12px}.cats{display:flex;gap:8px;overflow:auto;padding-bottom:5px}.cat{white-space:nowrap;border:1px solid var(--line);background:white;border-radius:20px;padding:9px 13px;color:var(--ink)}.cat.active{background:#e8efff;border-color:#b7cbff;color:var(--blue);font-weight:700}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.card{background:white;border:1px solid var(--line);border-radius:16px;padding:14px;min-width:0}.emoji{font-size:32px;background:#f0f4ff;border-radius:12px;padding:12px;text-align:center}.card h3{font-size:15px;margin:10px 0 5px}.price{font-weight:800;color:var(--blue)}.small{font-size:12px;color:var(--muted);margin-top:5px}
+.panel{background:white;border:1px solid var(--line);border-radius:16px;padding:16px;margin-top:18px}.fields{display:grid;gap:10px}.notice{font-size:12px;color:var(--muted);line-height:1.5;margin-top:18px;text-align:center}
+@media(min-width:600px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+</style>
+</head>
+<body>
+<header><button class="lang" id="lang">FR</button><div class="brand">🌍 WorldBazaar</div><div class="tag" id="tagline">Discover. Sell. Connect worldwide.</div>
+<div class="search"><input id="search" placeholder="Search products and services"><button class="btn" id="searchBtn">Search</button></div></header>
+<main class="wrap">
+<h2 id="catTitle">Explore categories</h2>
+<div class="cats" id="cats"></div>
+<h2 id="featuredTitle">Featured listings</h2>
+<div class="grid" id="listings"></div>
+<section class="panel"><h2 id="sellTitle">Start selling</h2><form id="listingForm" class="fields">
+<input id="itemName" required placeholder="Product or service name">
+<select id="itemType"><option value="Products">Product</option><option value="Services">Service</option></select>
+<input id="itemPrice" placeholder="Price (e.g. Rs 500)">
+<input id="itemCountry" placeholder="Country">
+<textarea id="itemDesc" rows="2" placeholder="Short description"></textarea>
+<button class="btn" type="submit" id="publish">Add demo listing</button>
+</form><p class="small" id="formNote">Demo only: listings are saved only on this device during this session.</p></section>
+<p class="notice">WorldBazaar preview. Demo listings only. No real accounts, public publishing, payments or private messaging yet.</p>
+</main>
+<script>
+const demo=[
+ {name:"Wireless headphones",price:"Rs 1,500",country:"Mauritius",type:"Electronics",emoji:"🎧",desc:"Bluetooth headphones"},
+ {name:"Graphic design",price:"Rs 800",country:"Mauritius",type:"Services",emoji:"🎨",desc:"Logo and social media design"},
+ {name:"Casual sneakers",price:"Rs 1,200",country:"Mauritius",type:"Fashion",emoji:"👟",desc:"Comfortable everyday shoes"},
+ {name:"Coffee table",price:"Rs 2,500",country:"Mauritius",type:"Home",emoji:"🪑",desc:"Modern home furniture"}
+];
+let category="All", french=false, listings=[...demo];
+const categories=["All","Products","Services","Electronics","Fashion","Home"];
+const $=id=>document.getElementById(id);
+function render(){
+ $("cats").innerHTML=categories.map(c=>`<button class="cat ${category===c?'active':''}" data-cat="${c}">${french?({All:"Tout",Products:"Produits",Services:"Services",Electronics:"Électronique",Fashion:"Mode",Home:"Maison"}[c]):c}</button>`).join("");
+ $("cats").querySelectorAll("button").forEach(b=>b.onclick=()=>{category=b.dataset.cat;render()});
+ const q=$("search").value.toLowerCase();
+ const shown=listings.filter(x=>(category==="All"||x.type===category||(category==="Products"&&!["Services"].includes(x.type)))&&(`${x.name} ${x.desc} ${x.country}`).toLowerCase().includes(q));
+ $("listings").innerHTML=shown.map(x=>`<article class="card"><div class="emoji">${x.emoji||"🛍️"}</div><h3>${escapeHtml(x.name)}</h3><div class="price">${escapeHtml(x.price||"Contact seller")}</div><div class="small">${escapeHtml(x.country||"")}</div><div class="small">${escapeHtml(x.desc||"")}</div></article>`).join("")||`<p>${french?"Aucune annonce trouvée.":"No listings found."}</p>`;
+}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+$("searchBtn").onclick=render;$("search").oninput=render;
+$("lang").onclick=()=>{french=!french;$("lang").textContent=french?"EN":"FR";$("tagline").textContent=french?"Découvrez. Vendez. Connectez-vous dans le monde entier.":"Discover. Sell. Connect worldwide.";$("catTitle").textContent=french?"Explorer les catégories":"Explore categories";$("featuredTitle").textContent=french?"Annonces à découvrir":"Featured listings";$("sellTitle").textContent=french?"Commencer à vendre":"Start selling";$("publish").textContent=french?"Ajouter une annonce démo":"Add demo listing";$("search").placeholder=french?"Rechercher des produits et services":"Search products and services";render();};
+$("listingForm").onsubmit=e=>{e.preventDefault();listings.unshift({name:$("itemName").value,price:$("itemPrice").value,country:$("itemCountry").value,type:$("itemType").value,desc:$("itemDesc").value,emoji:$("itemType").value==="Services"?"🧰":"🛍️"});e.target.reset();category="All";render();alert(french?"Annonce de démonstration ajoutée !":"Demo listing added!");};
+render();
+if("serviceWorker" in navigator && location.protocol.startsWith("http")) navigator.serviceWorker.register("./sw.js").catch(()=>{});
+</script>
+</body></html>
